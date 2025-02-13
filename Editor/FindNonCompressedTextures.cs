@@ -7,7 +7,7 @@ public class FindNonCompressedTextures : EditorWindow
     private List<string> nonMultipleOf4Textures = new List<string>();
     private Vector2 scrollPosition;
 
-    [MenuItem("Tools/ND Toolbox/Optimization/Find Textures Not Multiple of 4")]
+    [MenuItem("Tools/ND Toolbox/Optimization/Find Not Compressed Texture")]
     public static void ShowWindow()
     {
         GetWindow<FindNonCompressedTextures>("Find Textures Not Multiple of 4");
