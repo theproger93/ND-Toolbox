@@ -1,10 +1,10 @@
-#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using System.IO;
 
 public class GradientGuru : EditorWindow
 {
+#if UNITY_EDITOR
     private Gradient gradient = new Gradient()
     {
         colorKeys = new GradientColorKey[]
@@ -21,7 +21,7 @@ public class GradientGuru : EditorWindow
 
     private bool invertColors;
     private int textureSize = 256;
-    private float rotationDegrees;
+    private float rotationDegrees; // Using degrees for rotation
     private string saveFolderPath = "Assets/Textures";
 
     private Texture2D previewTexture;
@@ -46,12 +46,17 @@ public class GradientGuru : EditorWindow
         gradient = EditorGUILayout.GradientField("Gradient", gradient);
         invertColors = EditorGUILayout.Toggle("Invert Colors", invertColors);
         textureSize = EditorGUILayout.IntField("Texture Size", textureSize);
+
+        
         rotationDegrees = EditorGUILayout.Slider("Rotation (degrees)", rotationDegrees, 0f, 360f);
+
+        
         saveFolderPath = EditorGUILayout.TextField("Save Folder Path", saveFolderPath);
+
         GUILayout.BeginVertical(EditorStyles.helpBox);
         GUILayout.Label("Preview", EditorStyles.boldLabel);
 
-
+        
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         GUILayout.Label(previewTexture, GUILayout.Width(256), GUILayout.Height(256));
@@ -62,12 +67,11 @@ public class GradientGuru : EditorWindow
 
         GUILayout.BeginHorizontal();
 
-
+        
         if (GUILayout.Button("Generate Gradient"))
         {
             GenerateGradient();
         }
-
 
         if (GUILayout.Button("Save"))
         {
@@ -98,7 +102,7 @@ public class GradientGuru : EditorWindow
                 float rotatedX = Mathf.Cos(rotationRadians) * normalizedX - Mathf.Sin(rotationRadians) * normalizedY;
                 float rotatedY = Mathf.Sin(rotationRadians) * normalizedX + Mathf.Cos(rotationRadians) * normalizedY;
 
-                rotatedX = rotatedX + 0.5f;
+                rotatedX = rotatedX + 0.5f;  
                 rotatedY = rotatedY + 0.5f;
 
                 Color pixelColor = gradient.Evaluate(rotatedX);
@@ -113,14 +117,13 @@ public class GradientGuru : EditorWindow
         }
 
         previewTexture.Apply();
-        Repaint();
+        Repaint(); 
     }
 
     void SaveTexture()
     {
         string fileName = "GradientTexture.png";
         string currentFolderPath = saveFolderPath;
-
 
         if (!AssetDatabase.IsValidFolder(currentFolderPath))
         {
@@ -149,11 +152,11 @@ public class GradientGuru : EditorWindow
         RenderTexture rt = RenderTexture.GetTemporary(targetWidth, targetHeight, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default);
         RenderTexture.active = rt;
         Graphics.Blit(texture, rt);
-        texture.Reinitialize(targetWidth, targetHeight);
+        texture.GetPixel(targetWidth, targetHeight);
         texture.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
         texture.Apply();
         RenderTexture.active = null;
         RenderTexture.ReleaseTemporary(rt);
     }
-}
 #endif
+}

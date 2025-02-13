@@ -1,6 +1,6 @@
 {
   "name": "com.nikdornberg.ndtoolox",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "displayName": "ND Toolbox",
   "description": "ND Toolbox is a small yet powerful collection of tools designed for Unity enthusiasts who need quick and efficient solutions. Whether you're in a rush or looking to optimize your 2D game development workflow, this toolbox provides a set of handy utilities to streamline your process.\n\nFeatures:\n\nA curated list of small but effective tools to enhance productivity.\n\nFocused on speeding up development and optimizing 2D games.\n\nContinuously updated with new tools in development.\n\nStay tuned for future updates as we expand the toolbox with more features!\n\nFor more details, visit: nikdorn.com",
   "unity": "2022.1",
