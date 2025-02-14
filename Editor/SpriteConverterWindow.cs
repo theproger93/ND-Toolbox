@@ -51,7 +51,7 @@ public class SpriteConverterWindow : EditorWindow
 
             EditorGUILayout.Space();
 
-            overrideOriginal = EditorGUILayout.Toggle("Override Original", overrideOriginal);
+            overrideOriginal = EditorGUILayout.Toggle("Replace original file", overrideOriginal);
 
             GUIContent convertButtonContent = new GUIContent(" Resize and Save", EditorGUIUtility.IconContent("CanvasScaler Icon").image);
             if (GUILayout.Button(convertButtonContent, GUILayout.Height(40)))

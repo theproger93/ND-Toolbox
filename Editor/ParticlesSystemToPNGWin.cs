@@ -1,93 +1,117 @@
 using UnityEngine;
 using UnityEditor;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Scripts
 {
     public class ParticlesSystemToPNGWin : EditorWindow
     {
-
 #if UNITY_EDITOR
         private ParticleSystem _particlesSystem;
         private int _width = 512;
         private int _height = 512;
         private string _fileName = "ParticlesFrame";
-        private string _folderName = "ParticlesRenderd";
+        private string _folderName = "ParticlesRendered";
         private int _numFrames = 30;
         private float _frameDuration = 0.1f;
         private bool _cleanBackground = true;
         private bool _cameraAutoFit = true;
-        private const string _helpBox = "1. Drag and drop your particle system into the Particle System field." +
-            "\n2. Specify a file name for the PNGs you want to capture." +
-            "\n3. Specify a folder name to save the files. You can also include subfolders by using the forward slash (/) character. If the folder doesn't exist, the plugin will create it automatically and save all the files in it." +
-            "\n4. Determine the number of frames you want to capture." +
-            "\n5. Set the duration between frames capturing." +
-            "\n6. Enable (Camera Auto Size) to optimize PNG capture by adjusting the camera size to fit the particle system, reducing overdraw.";
 
+        private const string _helpBox = "1. Drag and drop your particle system into the Particle System field.\n" +
+                                       "2. Specify a file name for the PNGs you want to capture.\n" +
+                                       "3. Specify a folder name to save the files. You can also include subfolders by using the forward slash (/) character. If the folder doesn't exist, the plugin will create it automatically and save all the files in it.\n" +
+                                       "4. Determine the number of frames you want to capture.\n" +
+                                       "5. Set the duration between frames capturing.\n" +
+                                       "6. Enable (Camera Auto Size) to optimize PNG capture by adjusting the camera size to fit the particle system, reducing overdraw.";
 
-        private float startTime;
         private bool showTabContent;
+
+        // Store original layers
+        private Dictionary<GameObject, int> _originalLayers = new Dictionary<GameObject, int>();
 
         [MenuItem("Tools/ND Toolbox/Optimization/Particles System To PNGs")]
         public static void ShowWindow()
         {
-            EditorWindow.GetWindow(typeof(ParticlesSystemToPNGWin));
+            GetWindow<ParticlesSystemToPNGWin>("Particles to PNGs");
         }
 
         private void OnGUI()
         {
-            GUIStyle headLine = new GUIStyle(GUI.skin.label);
-            headLine.fontSize = 20;
-            headLine.fontStyle = FontStyle.Bold;
+            GUIStyle headLine = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 20,
+                fontStyle = FontStyle.Bold
+            };
 
             GUILayout.Label("Capture Settings", headLine);
             GUILayout.Space(20);
-            GUIContent particleSystem = new GUIContent("   Particles System", EditorGUIUtility.IconContent("Particle Effect").image);
-            _particlesSystem = EditorGUILayout.ObjectField(particleSystem, _particlesSystem, typeof(ParticleSystem), true) as ParticleSystem;
-            GUILayout.Space(5);
-            GUIContent width = new GUIContent("   Width", EditorGUIUtility.IconContent("d_RectTool On").image);
-            _width = EditorGUILayout.IntField(width, _width);
-            GUIContent height = new GUIContent("   Height", EditorGUIUtility.IconContent("d_RectTool On").image);
-            _height = EditorGUILayout.IntField(height, _height);
-            GUILayout.Space(5);
-            GUIContent fileName = new GUIContent("   Files Name", EditorGUIUtility.IconContent("d_RawImage Icon").image);
-            _fileName = EditorGUILayout.TextField(fileName, _fileName);
-            GUIContent folderName = new GUIContent("   Folder Name", EditorGUIUtility.IconContent("d_FolderOpened Icon").image);
-            _folderName = EditorGUILayout.TextField(folderName, _folderName);
-            GUILayout.Space(5);
-            GUIContent numFrames = new GUIContent("   Num. of Frames", EditorGUIUtility.IconContent("PreTextureArrayFirstSlice").image);
-            _numFrames = EditorGUILayout.IntField(numFrames, _numFrames);
-            GUIContent frameTime = new GUIContent("   Frame Duration", EditorGUIUtility.IconContent("d_UnityEditor.AnimationWindow").image);
-            _frameDuration = EditorGUILayout.FloatField(frameTime, _frameDuration);
-            GUILayout.Space(5);
-            GUIContent cleanBackground = new GUIContent("   Clean Background", EditorGUIUtility.IconContent("d_RectMask2D Icon").image);
-            _cleanBackground = EditorGUILayout.Toggle(cleanBackground, _cleanBackground);
-            GUIContent cameraAutoSize = new GUIContent("   Camera auto size", EditorGUIUtility.IconContent("d_ScaleTool On").image);
-            _cameraAutoFit = EditorGUILayout.Toggle(cameraAutoSize, _cameraAutoFit);
+
+            // Particle System Field
+            GUIContent particleSystemContent = new GUIContent("   Particles System", EditorGUIUtility.IconContent("Particle Effect").image);
+            _particlesSystem = EditorGUILayout.ObjectField(particleSystemContent, _particlesSystem, typeof(ParticleSystem), true) as ParticleSystem;
+
+            // Width and Height Fields
+            GUIContent widthContent = new GUIContent("   Width", EditorGUIUtility.IconContent("d_RectTool On").image);
+            _width = EditorGUILayout.IntField(widthContent, _width);
+            GUIContent heightContent = new GUIContent("   Height", EditorGUIUtility.IconContent("d_RectTool On").image);
+            _height = EditorGUILayout.IntField(heightContent, _height);
+
+            // File and Folder Name Fields
+            GUIContent fileNameContent = new GUIContent("   Files Name", EditorGUIUtility.IconContent("d_RawImage Icon").image);
+            _fileName = EditorGUILayout.TextField(fileNameContent, _fileName);
+            GUIContent folderNameContent = new GUIContent("   Folder Name", EditorGUIUtility.IconContent("d_FolderOpened Icon").image);
+            _folderName = EditorGUILayout.TextField(folderNameContent, _folderName);
+
+            // Number of Frames and Frame Duration Fields
+            GUIContent numFramesContent = new GUIContent("   Num. of Frames", EditorGUIUtility.IconContent("PreTextureArrayFirstSlice").image);
+            _numFrames = EditorGUILayout.IntField(numFramesContent, _numFrames);
+            GUIContent frameTimeContent = new GUIContent("   Frame Duration", EditorGUIUtility.IconContent("d_UnityEditor.AnimationWindow").image);
+            _frameDuration = EditorGUILayout.FloatField(frameTimeContent, _frameDuration);
+
+            // Clean Background and Camera Auto Fit Toggles
+            GUIContent cleanBackgroundContent = new GUIContent("   Clean Background", EditorGUIUtility.IconContent("d_RectMask2D Icon").image);
+            _cleanBackground = EditorGUILayout.Toggle(cleanBackgroundContent, _cleanBackground);
+            GUIContent cameraAutoSizeContent = new GUIContent("   Camera Auto Size", EditorGUIUtility.IconContent("d_ScaleTool On").image);
+            _cameraAutoFit = EditorGUILayout.Toggle(cameraAutoSizeContent, _cameraAutoFit);
 
             GUILayout.Space(10);
-            GUIStyle greenButtonStyle = new GUIStyle(GUI.skin.button);
-            greenButtonStyle.normal.textColor = Color.cyan;
-            greenButtonStyle.hover.textColor = Color.green;
-            greenButtonStyle.fontSize = 20;
-            greenButtonStyle.fontStyle = FontStyle.Bold;
+
+            // Capture Button
+            GUIStyle greenButtonStyle = new GUIStyle(GUI.skin.button)
+            {
+                normal = { textColor = Color.cyan },
+                hover = { textColor = Color.green },
+                fontSize = 20,
+                fontStyle = FontStyle.Bold
+            };
 
             GUIContent captureButtonContent = new GUIContent("   CAPTURE", EditorGUIUtility.IconContent("Animation.Record@2x").image);
             if (GUILayout.Button(captureButtonContent, greenButtonStyle, GUILayout.Height(50)))
             {
+                if (_particlesSystem == null)
+                {
+                    Debug.LogError("No particle system selected!");
+                    return;
+                }
                 Capture();
             }
 
+            // Help Box
             showTabContent = EditorGUILayout.Foldout(showTabContent, "How to use ?");
             if (showTabContent)
             {
                 EditorGUILayout.HelpBox(_helpBox, MessageType.Info);
             }
 
-            GUIStyle linkButton = new GUIStyle(GUI.skin.button);
-            linkButton.hover.textColor = Color.green;
-            linkButton.fontSize = 8;
-            if (GUILayout.Button("NikDorn.com", linkButton))
+            // Link to Website
+            GUIStyle linkButtonStyle = new GUIStyle(GUI.skin.button)
+            {
+                hover = { textColor = Color.green },
+                fontSize = 8
+            };
+
+            if (GUILayout.Button("NikDorn.com", linkButtonStyle))
             {
                 Application.OpenURL("https://nikdorn.com/");
             }
@@ -95,37 +119,55 @@ namespace Scripts
 
         private void Capture()
         {
-            Camera newCamera = new GameObject("CaptureCamera", typeof(Camera)).GetComponent<Camera>();
+            // Create a new camera for rendering
+            Camera captureCamera = new GameObject("CaptureCamera", typeof(Camera)).GetComponent<Camera>();
+            captureCamera.clearFlags = CameraClearFlags.Color;
+            captureCamera.backgroundColor = Color.clear;
+            captureCamera.orthographic = true;
+            captureCamera.nearClipPlane = 0.01f;
+            captureCamera.farClipPlane = 100f;
 
-            // Set up camera properties
-            newCamera.clearFlags = CameraClearFlags.Color; // Remove skybox
-            newCamera.backgroundColor = Color.clear; // Transparent background
-            newCamera.orthographic = true;
-            newCamera.nearClipPlane = 0.01f;
-            newCamera.farClipPlane = 100f;
-
-            string folderPath = Application.dataPath + "/" + _folderName;
+            // Create the output folder if it doesn't exist
+            string folderPath = Path.Combine(Application.dataPath, _folderName);
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
             }
 
-            startTime = Time.time;
-            float timePerFrame = _particlesSystem.main.duration / (float)_numFrames;
+            // Set up the render texture
             RenderTexture renderTexture = new RenderTexture(_width, _height, 32, RenderTextureFormat.ARGB32);
-            _particlesSystem.gameObject.SetActive(true);
+            captureCamera.targetTexture = renderTexture;
 
+            // Configure the particle system layer for background cleaning
             if (_cleanBackground)
             {
-                int particleLayer = LayerMask.NameToLayer("PNGs");
+                // Store original layers
+                _originalLayers.Clear();
+                StoreOriginalLayer(_particlesSystem.gameObject);
+                foreach (var renderer in _particlesSystem.GetComponentsInChildren<ParticleSystemRenderer>())
+                {
+                    StoreOriginalLayer(renderer.gameObject);
+                }
+
+                // Find an available layer for the particle system
+                int particleLayer = FindAvailableLayer();
+                if (particleLayer == -1)
+                {
+                    Debug.LogError("No available layer found for particle system. Please ensure at least one layer is unused.");
+                    DestroyImmediate(captureCamera.gameObject);
+                    return;
+                }
+
+                // Assign the particle system and its children to the new layer
                 _particlesSystem.gameObject.layer = particleLayer;
                 foreach (var renderer in _particlesSystem.GetComponentsInChildren<ParticleSystemRenderer>())
                 {
                     renderer.gameObject.layer = particleLayer;
                 }
-                newCamera.cullingMask = 1 << particleLayer;
+                captureCamera.cullingMask = 1 << particleLayer;
             }
 
+            // Auto-fit the camera to the particle system bounds
             if (_cameraAutoFit)
             {
                 ParticleSystemRenderer[] renderers = _particlesSystem.GetComponentsInChildren<ParticleSystemRenderer>();
@@ -138,23 +180,22 @@ namespace Scripts
                     }
 
                     float cameraSize = Mathf.Max(bounds.size.x, bounds.size.y) / 2f;
-                    newCamera.orthographicSize = cameraSize;
-                    newCamera.transform.position = new Vector3(bounds.center.x, bounds.center.y, -10f);
+                    captureCamera.orthographicSize = cameraSize;
+                    captureCamera.transform.position = new Vector3(bounds.center.x, bounds.center.y, -10f);
                 }
             }
 
-            newCamera.targetTexture = renderTexture;
-
+            // Capture frames
+            Texture2D texture = new Texture2D(_width, _height, TextureFormat.RGBA32, false);
             for (int i = 0; i < _numFrames; i++)
             {
-                EditorUtility.DisplayProgressBar("Capturing Frames", $"Frame {i} of {_numFrames}", (float)i / _numFrames);
+                EditorUtility.DisplayProgressBar("Capturing Frames", $"Frame {i + 1} of {_numFrames}", (float)i / _numFrames);
 
                 _particlesSystem.Simulate(_frameDuration, true, false);
                 _particlesSystem.Play();
-                newCamera.Render();
+                captureCamera.Render();
 
                 RenderTexture.active = renderTexture;
-                Texture2D texture = new Texture2D(_width, _height, TextureFormat.RGBA32, false);
                 texture.ReadPixels(new Rect(0, 0, _width, _height), 0, 0);
                 texture.Apply();
 
@@ -162,17 +203,50 @@ namespace Scripts
                 string filePath = Path.Combine(folderPath, $"{_fileName}_{i}.png");
                 File.WriteAllBytes(filePath, bytes);
                 Debug.Log($"Saved frame {i} to {filePath}");
-
-                RenderTexture.active = null;
             }
 
+            // Clean up
             EditorUtility.ClearProgressBar();
             AssetDatabase.Refresh();
-            DestroyImmediate(newCamera.gameObject);
+            DestroyImmediate(captureCamera.gameObject);
+
+            // Restore original layers
+            if (_cleanBackground)
+            {
+                RestoreOriginalLayers();
+            }
+
+            Debug.Log("Capture complete!");
         }
 
+       
+        private void StoreOriginalLayer(GameObject gameObject)
+        {
+            _originalLayers[gameObject] = gameObject.layer;
+        }
 
+        
+        private void RestoreOriginalLayers()
+        {
+            foreach (var kvp in _originalLayers)
+            {
+                kvp.Key.layer = kvp.Value;
+            }
+            _originalLayers.Clear();
+        }
+
+        
+        private int FindAvailableLayer()
+        {
+            for (int i = 0; i < 32; i++)
+            {
+                if (string.IsNullOrEmpty(LayerMask.LayerToName(i)))
+                {
+                    return i; 
+                }
+            }
+            return -1; 
+        }
 #endif
     }
-
 }
