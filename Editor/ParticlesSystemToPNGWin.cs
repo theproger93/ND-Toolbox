@@ -3,8 +3,6 @@ using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
 
-namespace Scripts
-{
     public class ParticlesSystemToPNGWin : EditorWindow
     {
 #if UNITY_EDITOR
@@ -249,4 +247,3 @@ namespace Scripts
         }
 #endif
     }
-}
