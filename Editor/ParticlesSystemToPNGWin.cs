@@ -183,30 +183,34 @@ using System.Collections.Generic;
                 }
             }
 
-            // Capture frames
-            Texture2D texture = new Texture2D(_width, _height, TextureFormat.RGBA32, false);
-            for (int i = 0; i < _numFrames; i++)
-            {
-                EditorUtility.DisplayProgressBar("Capturing Frames", $"Frame {i + 1} of {_numFrames}", (float)i / _numFrames);
+        // Capture frames
+        Texture2D texture = new Texture2D(_width, _height, TextureFormat.RGBA32, false);
+        for (int i = 0; i < _numFrames; i++)
+        {
+            EditorUtility.DisplayProgressBar("Capturing Frames", $"Frame {i + 1} of {_numFrames}", (float)i / _numFrames);
 
-                _particlesSystem.Simulate(_frameDuration, true, false);
-                _particlesSystem.Play();
-                captureCamera.Render();
+            _particlesSystem.Simulate(_frameDuration, true, false);
+            _particlesSystem.Play();
+            captureCamera.Render();
 
-                RenderTexture.active = renderTexture;
-                texture.ReadPixels(new Rect(0, 0, _width, _height), 0, 0);
-                texture.Apply();
+            RenderTexture.active = renderTexture;
+            texture.ReadPixels(new Rect(0, 0, _width, _height), 0, 0);
+            texture.Apply();
 
-                byte[] bytes = texture.EncodeToPNG();
-                string filePath = Path.Combine(folderPath, $"{_fileName}_{i}.png");
-                File.WriteAllBytes(filePath, bytes);
-                Debug.Log($"Saved frame {i} to {filePath}");
-            }
+            byte[] bytes = texture.EncodeToPNG();
+            string filePath = Path.Combine(folderPath, $"{_fileName}_{i}.png");
+            File.WriteAllBytes(filePath, bytes);
+            Debug.Log($"Saved frame {i} to {filePath}");
+        }
 
-            // Clean up
-            EditorUtility.ClearProgressBar();
+        // Reset active RenderTexture before cleanup
+        RenderTexture.active = null;
+
+        // Clean up
+        EditorUtility.ClearProgressBar();
             AssetDatabase.Refresh();
-            DestroyImmediate(captureCamera.gameObject);
+        renderTexture.Release();
+        DestroyImmediate(captureCamera.gameObject);
 
             // Restore original layers
             if (_cleanBackground)
