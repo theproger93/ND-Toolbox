@@ -24,6 +24,7 @@
 <h3 align="center">✨ Key Features</h3>
 
 <ul>
+  <li><strong>TMP Animated Text Advanced - 17 effects</strong> ✨ — inline, tag-driven TextMeshPro animations with clean output, rich-text nesting, dynamic runtime updates, and optional looping typewriter. <a href="https://nikdorn.com/tmp-animated-text-documentation/" target="_blank"> <strong>👉 Documentation</strong></a></li>
   <li><strong>Find Not Compressed Texture</strong> 🔍: Identify uncompressed textures in your project.</li>
   <li><strong>Sprite Size Optimizer</strong> 📏: Adjust texture sizes for DTX5 compression.</li>
   <li><strong>Particles System To PNGs</strong> 🌟: Capture particle systems as PNG images.</li>
